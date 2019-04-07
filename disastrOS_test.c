@@ -19,7 +19,12 @@ void childFunction(void* args){
   int type=0;
   int mode=0;
   int fd=disastrOS_openResource(disastrOS_getpid(),type,mode);
+
   printf("fd=%d\n", fd);
+  
+  int sem_fd = DisastrOS_semOpen(disastrOS_getpid());
+  printf("sem_fd=%d\n", sem_fd);
+
   printf("PID: %d, terminating\n", disastrOS_getpid());
 
   for (int i=0; i<(disastrOS_getpid()+1); ++i){

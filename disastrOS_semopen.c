@@ -29,17 +29,20 @@ void internal_semOpen(){
     s = Semaphore_alloc(sem_id,1);
     List_insert(&semaphores_list, semaphores_list.last, (ListItem*)s);
   }
+  else{
+    printf("semaphore found, will open it!\n");
+  }
 
-  SemDescriptor* fd = SemDescriptor_alloc(running->last_fd, s, running);
+  SemDescriptor* fd = SemDescriptor_alloc(running->last_sem_fd, s, running);
   if (!fd) {
     running->syscall_retvalue = DSOS_ESEMNOFD;
     return;
   }  
-  running->last_fd++;
+  running->last_sem_fd++;
 
   SemDescriptorPtr* fd_ptr = SemDescriptorPtr_alloc(fd);
 
-  List_insert(&running->descriptors, running->descriptors.last, (ListItem*)fd);
+  List_insert(&running->sem_descriptors, running->sem_descriptors.last, (ListItem*)fd);
   
   fd->ptr = fd_ptr;
   List_insert(&s->descriptors, s->descriptors.last, (ListItem*)fd_ptr);

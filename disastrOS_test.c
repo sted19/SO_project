@@ -21,9 +21,14 @@ void childFunction(void* args){
   int fd=disastrOS_openResource(disastrOS_getpid(),type,mode);
 
   printf("fd=%d\n", fd);
-  
+
+  // test sem_open
   int sem_fd = DisastrOS_semOpen(disastrOS_getpid());
-  printf("sem_fd=%d\n", sem_fd);
+  if (sem_fd<0) {
+    fprintf(stderr,"error %d opening the semaphore",sem_fd);
+    disastrOS_exit(sem_fd);
+  }
+  printf("opened semaphore with id=%d\t and descriptor=%d\n", disastrOS_getpid(), sem_fd);
 
   printf("PID: %d, terminating\n", disastrOS_getpid());
 
@@ -31,6 +36,14 @@ void childFunction(void* args){
     printf("PID: %d, iterate %d\n", disastrOS_getpid(), i);
     disastrOS_sleep((20-disastrOS_getpid())*5);
   }
+
+  //test sem_close
+  int res = DisastrOs_semClose(disastrOS_getpid());
+  if (res){
+    fprintf(stderr,"error %d, semaphore %d does not exist!",res,disastrOS_getpid());
+    disastrOS_exit(res);
+  }
+
   disastrOS_exit(disastrOS_getpid()+1);
 }
 
@@ -49,6 +62,14 @@ void initFunction(void* args) {
     printf("mode: %d\n", mode);
     printf("opening resource (and creating if necessary)\n");
     int fd=disastrOS_openResource(i,type,mode);
+
+    int sem_fd = DisastrOS_semOpen(i);
+    if (sem_fd<0) {
+      fprintf(stderr,"error %d opening the semaphore",sem_fd);
+      disastrOS_exit(sem_fd);
+    }
+    printf("opened semaphore with id=%d\t and descriptor=%d\n", i, sem_fd);
+
     printf("fd=%d\n", fd);
     disastrOS_spawn(childFunction, 0);
     alive_children++;

@@ -33,6 +33,9 @@
 #define DSOS_ESEMNEGID  -14;
 #define DSOS_ESEMNOFD   -15;
 
+#define DSOS_ESEMNOTEX  -16;
+#define DSOS_ESEMNOTALLW -17;
+
 // syscall numbers
 #define DSOS_MAX_SYSCALLS 32
 #define DSOS_MAX_SYSCALLS_ARGS 8

@@ -6,17 +6,9 @@
 #include "disastrOS_semaphore.h"
 #include "disastrOS_semdescriptor.h"
 
-int init = 0;
-
 void internal_semOpen(){
 
   int sem_id = running->syscall_args[0];
-
-  if (init == 0) {
-    Semaphore_init();
-    SemDescriptor_init();
-    init = 1;
-  }
 
   if (sem_id < 0) {
     fprintf(stderr,"Sem ID must be greater than 0!");

@@ -8,21 +8,34 @@
 
 void internal_semOpen(){
 
+  // get from the PCB the id of the semaphore to open
   int sem_id = running->syscall_args[0];
 
+  // ids are greater than 0
   if (sem_id < 0) {
     fprintf(stderr,"Sem ID must be greater than 0!");
     running->syscall_retvalue = DSOS_ESEMNEGID;
     return;
   }
 
+  // check if semaphore id is already opened in the system, otherwise alloc the new semaphore
   Semaphore* s = SemaphoreList_byId(&semaphores_list ,sem_id);
   if (!s) {
     s = Semaphore_alloc(sem_id,1);
     List_insert(&semaphores_list, semaphores_list.last, (ListItem*)s);
   }
   else{
-    printf("semaphore found, will open it!\n");
+    printf("semaphore found and opened!\n");
+  }
+
+  // check if semaphore s has already been opened from this process
+  SemDescriptor* aux = (SemDescriptor*) running->sem_descriptors.first;
+  while (aux){
+    if (aux->semaphore == s){
+      running->syscall_retvalue = aux->fd;
+      return;
+    }
+    aux = (SemDescriptor*)((ListItem*)aux)->next;
   }
 
   SemDescriptor* fd = SemDescriptor_alloc(running->last_sem_fd, s, running);

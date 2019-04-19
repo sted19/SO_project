@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <poll.h>
-
+#include "semaphores_test.h"
 #include "disastrOS.h"
+
+int global_var = 0;
 
 // we need this to handle the sleep state
 void sleeperFunction(void* args){
@@ -22,14 +24,21 @@ void childFunction(void* args){
 
   printf("fd=%d\n", fd);
 
-  // test sem_open
-  int sem_fd = DisastrOS_semOpen(disastrOS_getpid());
-  if (sem_fd<0) {
-    fprintf(stderr,"error %d opening the semaphore",sem_fd);
-    disastrOS_exit(sem_fd);
-  }
-  printf("opened semaphore with id=%d\t and descriptor=%d\n", disastrOS_getpid(), sem_fd);
+  // my semOpen test
+  test_semOpen(5);
 
+  disastrOS_printStatus();
+  // my semWait test
+  test_semWait(5);
+
+  fprintf(stdout,"Process %d\tglobal var is %d\n",disastrOS_getpid(),global_var);
+  global_var++;
+  fprintf(stdout,"Process %d\tglobal var is %d\n",disastrOS_getpid(),global_var);
+  disastrOS_sleep(10);
+  fprintf(stdout,"Process %d\tglobal var is %d\n",disastrOS_getpid(),global_var);
+
+  test_semPost(5);
+  
   printf("PID: %d, terminating\n", disastrOS_getpid());
 
   for (int i=0; i<(disastrOS_getpid()+1); ++i){
@@ -37,12 +46,7 @@ void childFunction(void* args){
     disastrOS_sleep((20-disastrOS_getpid())*5);
   }
 
-  //test sem_close
-  int res = DisastrOs_semClose(disastrOS_getpid());
-  if (res){
-    fprintf(stderr,"error %d, semaphore %d does not exist!",res,disastrOS_getpid());
-    disastrOS_exit(res);
-  }
+  test_semClose(5);
 
   disastrOS_exit(disastrOS_getpid()+1);
 }
@@ -63,12 +67,7 @@ void initFunction(void* args) {
     printf("opening resource (and creating if necessary)\n");
     int fd=disastrOS_openResource(i,type,mode);
 
-    int sem_fd = DisastrOS_semOpen(i);
-    if (sem_fd<0) {
-      fprintf(stderr,"error %d opening the semaphore",sem_fd);
-      disastrOS_exit(sem_fd);
-    }
-    printf("opened semaphore with id=%d\t and descriptor=%d\n", i, sem_fd);
+    test_semOpen(i);
 
     printf("fd=%d\n", fd);
     disastrOS_spawn(childFunction, 0);
@@ -84,6 +83,13 @@ void initFunction(void* args) {
 	   pid, retval, alive_children);
     --alive_children;
   }
+
+  // close all semaphores previously opened
+  for (int i=0; i<10;i++){
+    test_semClose(i);
+  }
+  disastrOS_printStatus();
+
   printf("shutdown!");
   disastrOS_shutdown();
 }

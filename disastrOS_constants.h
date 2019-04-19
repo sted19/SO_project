@@ -30,11 +30,10 @@
 #define DSOS_ERESOURCEINUSE -13
 
 // semaphores-errors
-#define DSOS_ESEMNEGID  -14;
-#define DSOS_ESEMNOFD   -15;
-
-#define DSOS_ESEMNOTEX  -16;
-#define DSOS_ESEMNOTALLW -17;
+#define DSOS_ESEMNEGID  -14
+#define DSOS_ESEMNOFD   -15
+#define DSOS_ESEMNOTEX  -16
+#define DSOS_ESEMNOTALLW -17
 
 // syscall numbers
 #define DSOS_MAX_SYSCALLS 32

@@ -43,7 +43,10 @@ void internal_semClose(){
     SemDescriptorPtr_free(des_ptr);
   }
 
-  if (s->descriptors.size == 0) Semaphore_free(s);
+  if (s->descriptors.size == 0) {
+    Semaphore* s_del = (Semaphore*)List_detach(&semaphores_list, (ListItem*)s);
+    Semaphore_free(s_del);
+  }
 
   running->syscall_retvalue=0;
 }

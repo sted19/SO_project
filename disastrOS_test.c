@@ -3,6 +3,7 @@
 #include <poll.h>
 #include "semaphores_test.h"
 #include "disastrOS.h"
+#include <assert.h>
 
 int global_var = 0;
 
@@ -18,18 +19,15 @@ void sleeperFunction(void* args){
 void childFunction(void* args){
   printf("Hello, I am the child function %d\n",disastrOS_getpid());
   printf("I will iterate a bit, before terminating\n");
-  int type=0;
-  int mode=0;
-  int fd=disastrOS_openResource(disastrOS_getpid(),type,mode);
 
-  printf("fd=%d\n", fd);
+  // my semOpen tes
+  int sem_fd = test_semOpen(5);
+  int sem_fd2 = test_semOpen(5);
+  assert(sem_fd == sem_fd2);
 
-  // my semOpen test
-  test_semOpen(5);
-
-  disastrOS_printStatus();
   // my semWait test
-  test_semWait(5);
+  test_semWait(sem_fd);
+  test_semWait(sem_fd+1);
 
   fprintf(stdout,"Process %d\tglobal var is %d\n",disastrOS_getpid(),global_var);
   global_var++;
@@ -37,7 +35,8 @@ void childFunction(void* args){
   disastrOS_sleep(10);
   fprintf(stdout,"Process %d\tglobal var is %d\n",disastrOS_getpid(),global_var);
 
-  test_semPost(5);
+  test_semPost(sem_fd);
+  test_semPost(sem_fd-1);
   
   printf("PID: %d, terminating\n", disastrOS_getpid());
 
@@ -46,7 +45,8 @@ void childFunction(void* args){
     disastrOS_sleep((20-disastrOS_getpid())*5);
   }
 
-  test_semClose(5);
+  test_semClose(sem_fd);
+  test_semClose(sem_fd-1);
 
   disastrOS_exit(disastrOS_getpid()+1);
 }
@@ -58,18 +58,12 @@ void initFunction(void* args) {
   disastrOS_spawn(sleeperFunction, 0);
   
 
-  printf("I feel like to spawn 10 nice threads\n");
+  printf("I feel like to spawn 4 nice threads\n");
   int alive_children=0;
-  for (int i=0; i<10; ++i) {
-    int type=0;
-    int mode=DSOS_CREATE;
-    printf("mode: %d\n", mode);
-    printf("opening resource (and creating if necessary)\n");
-    int fd=disastrOS_openResource(i,type,mode);
+  int sem_fd[4];
+  for (int i=0; i<4; ++i) {
+    sem_fd[i] = test_semOpen(i);
 
-    test_semOpen(i);
-
-    printf("fd=%d\n", fd);
     disastrOS_spawn(childFunction, 0);
     alive_children++;
   }
@@ -78,15 +72,15 @@ void initFunction(void* args) {
   int retval;
   int pid;
   while(alive_children>0 && (pid=disastrOS_wait(0, &retval))>=0){ 
-    disastrOS_printStatus();
     printf("initFunction, child: %d terminated, retval:%d, alive: %d \n",
 	   pid, retval, alive_children);
+    disastrOS_printStatus();
     --alive_children;
   }
 
   // close all semaphores previously opened
-  for (int i=0; i<10;i++){
-    test_semClose(i);
+  for (int i=0; i<4;i++){
+    test_semClose(sem_fd[i]);
   }
   disastrOS_printStatus();
 

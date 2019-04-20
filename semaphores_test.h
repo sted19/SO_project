@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "disastrOS_constants.h"
 
-void test_semOpen(int id);
-void test_semClose(int id);
-void test_semWait(int id);
-void test_semPost(int id);
+int test_semOpen(int id);
+void test_semClose(int fd);
+void test_semWait(int fd);
+void test_semPost(int fd);

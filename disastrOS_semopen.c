@@ -13,7 +13,6 @@ void internal_semOpen(){
 
   // ids are greater than 0
   if (sem_id < 0) {
-    fprintf(stderr,"Sem ID must be greater than 0!");
     running->syscall_retvalue = DSOS_ESEMNEGID;
     return;
   }
@@ -25,6 +24,7 @@ void internal_semOpen(){
     List_insert(&semaphores_list, semaphores_list.last, (ListItem*)s);
   }
   else{
+    //to remove
     printf("semaphore found and opened!\n");
   }
 
@@ -37,6 +37,8 @@ void internal_semOpen(){
     }
     aux = (SemDescriptor*)((ListItem*)aux)->next;
   }
+
+  assert(!aux);
 
   SemDescriptor* fd = SemDescriptor_alloc(running->last_sem_fd, s, running);
   if (!fd) {

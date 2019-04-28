@@ -16,6 +16,9 @@ int test_semOpen(int id){
         case DSOS_ESEMNOFDPTR:
             fprintf(stderr,"SEM_OPEN ERROR %d: error allocating file descriptor pointer's memory block\n",DSOS_ESEMNOFDPTR);
             return -1;
+        case DSOS_ESEMMAXNUMDES:
+            fprintf(stderr,"SEM_OPEN ERROR %d: allocated maximum number of file descriptors per process\n",DSOS_ESEMMAXNUMDES);
+            return -1;
         default:
             printf("SEM_OPEN: opened semaphore with id=%d and descriptor=%d\n", id, sem_fd);
             return sem_fd;

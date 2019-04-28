@@ -11,6 +11,11 @@ void internal_semOpen(){
   // get from the PCB the id of the semaphore to open
   int sem_id = running->syscall_args[0];
 
+  if(running->sem_descriptors.size > MAX_NUM_SEMDESCRIPTORS_PER_PROCESS){
+    running->syscall_retvalue = DSOS_ESEMMAXNUMDES;
+    return;
+  }
+
   // ids are greater than 0
   if (sem_id < 0) {
     running->syscall_retvalue = DSOS_ESEMNEGID;

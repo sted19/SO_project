@@ -20,23 +20,32 @@ void childFunction(void* args){
   printf("Hello, I am the child function %d\n",disastrOS_getpid());
   printf("I will iterate a bit, before terminating\n");
 
-  // my semOpen tes
+  printf("Open semaphore with id=5\n");
   int sem_fd = test_semOpen(5);
+  printf("Open twice the semaphore 5, the print should return the same fd=%d as before\n",sem_fd);
   int sem_fd2 = test_semOpen(5);
-  assert(sem_fd == sem_fd2);
+  printf("%d==%d\n",sem_fd,sem_fd2);
+  
 
-  // my semWait test
+  printf("SemWait on fd=%d\n",sem_fd);
   test_semWait(sem_fd);
+  printf("SemWait on fd=%d, should return DSOS_ESEMNOTALLW error code %d\n",sem_fd+1,DSOS_ESEMNOTALLW);
   test_semWait(sem_fd+1);
 
-  fprintf(stdout,"Process %d\tglobal var is %d\n",disastrOS_getpid(),global_var);
-  global_var++;
-  fprintf(stdout,"Process %d\tglobal var is %d\n",disastrOS_getpid(),global_var);
-  disastrOS_sleep(10);
-  fprintf(stdout,"Process %d\tglobal var is %d\n",disastrOS_getpid(),global_var);
+  printf("THREAD %d HAS ENTERED CRITICAL SECTION\n", disastrOS_getpid());
 
+  fprintf(stdout,"Thread %d\tglobal var is %d\n",disastrOS_getpid(),global_var);
+  global_var++;
+  fprintf(stdout,"Thread %d\tglobal var is %d\tthis thread will now sleep for a while\n",disastrOS_getpid(),global_var);
+  disastrOS_sleep(20);
+  fprintf(stdout,"Thread %d is out of sleep\tglobal var is %d\n",disastrOS_getpid(),global_var);
+
+  printf("THREAD %d WILL NOW EXIT CRITICAL SECTION\n", disastrOS_getpid());
+
+  printf("SemPost on fd=%d\n",sem_fd);
   test_semPost(sem_fd);
-  test_semPost(sem_fd-1);
+  printf("SemPost on fd=%d, should return DSOS_ESEMNOTALLW error code %d\n",sem_fd+1,DSOS_ESEMNOTALLW);
+  test_semPost(sem_fd+1);
   
   printf("PID: %d, terminating\n", disastrOS_getpid());
 
@@ -45,8 +54,10 @@ void childFunction(void* args){
     disastrOS_sleep((20-disastrOS_getpid())*5);
   }
 
+  printf("close semaphore with fd=%d\n",sem_fd);
   test_semClose(sem_fd);
-  test_semClose(sem_fd-1);
+  printf("try to close semaphore with fd=%d, should return DSOS_ESEMNOTALLW error code %d\n",sem_fd+1,DSOS_ESEMNOTALLW);
+  test_semClose(sem_fd+1);
 
   disastrOS_exit(disastrOS_getpid()+1);
 }
@@ -60,6 +71,12 @@ void initFunction(void* args) {
 
   printf("I feel like to spawn 4 nice threads\n");
   int alive_children=0;
+
+  printf("main thread tries to open semaphore with id<0, should return DSOS_ESEMNEGID error code %d\n",DSOS_ESEMNEGID);
+  int sem_fdo = test_semOpen(-1);
+  printf("error code returned is %d\n",sem_fdo);
+
+  printf("main thread opens 4 semaphores\n");
   int sem_fd[4];
   for (int i=0; i<4; ++i) {
     sem_fd[i] = test_semOpen(i);
@@ -78,10 +95,14 @@ void initFunction(void* args) {
     --alive_children;
   }
 
-  // close all semaphores previously opened
+  printf("main thread closes definitely all semaphores\n");
   for (int i=0; i<4;i++){
     test_semClose(sem_fd[i]);
   }
+
+  printf("main thread tries to close semaphore with fd<0, should return DSOS_ESEMNEGFD error code %d\n",DSOS_ESEMNEGFD);
+  test_semClose(-1);
+
   disastrOS_printStatus();
 
   printf("shutdown!");

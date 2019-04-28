@@ -21,11 +21,11 @@ void internal_semOpen(){
   Semaphore* s = SemaphoreList_byId(&semaphores_list ,sem_id);
   if (!s) {
     s = Semaphore_alloc(sem_id,1);
+    if (!s){
+      running->syscall_retvalue = DSOS_ESEMNOALLOC;
+      return;
+    }
     List_insert(&semaphores_list, semaphores_list.last, (ListItem*)s);
-  }
-  else{
-    //to remove
-    printf("semaphore found and opened!\n");
   }
 
   // check if semaphore s has already been opened from this process
@@ -48,6 +48,10 @@ void internal_semOpen(){
   running->last_sem_fd++;
 
   SemDescriptorPtr* fd_ptr = SemDescriptorPtr_alloc(fd);
+  if (!fd_ptr){
+    running->syscall_retvalue = DSOS_ESEMNOFDPTR;
+    return;
+  }
 
   List_insert(&running->sem_descriptors, running->sem_descriptors.last, (ListItem*)fd);
   

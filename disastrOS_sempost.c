@@ -16,23 +16,15 @@ void internal_semPost(){
   }
 
   // check whether the descriptor is amongst the process' open descriptors
-  ListItem* aux = running->sem_descriptors.first;
-  int present = 0;
-  for (int i = 0; i<running->sem_descriptors.size; i++){
-    if (((SemDescriptor*)aux)->fd == fd) {
-      present = 1;
-      break;
-    }
-    aux = aux->next;
-  }
-  // if the semaphore hasn't previously been opened, return NOT ALLOWED OPERATION error
-  if (!present){
-    running->syscall_retvalue=DSOS_ESEMNOTALLW;
+  SemDescriptor* aux = (SemDescriptor*)SemDescriptorList_byFd((ListHead*)&running->sem_descriptors,fd);
+  if (!aux){
+    running->syscall_retvalue = DSOS_ESEMNOTALLW;
     return;
   }
 
   Semaphore* s = ((SemDescriptor*)aux)->semaphore;
 
+  // if count > 0 means no-one is waiting, just need to increment it
   if (s->count>0){
     s->count++;
     running->syscall_retvalue = 0;
@@ -41,6 +33,7 @@ void internal_semPost(){
 
   assert(s->count==0);
 
+  // if count == 0, need to set as ready the first process that entered the waiting list
   if (s->waiting_descriptors.first){
     SemDescriptorPtr* des_ptr = (SemDescriptorPtr*)List_detach(&s->waiting_descriptors, s->waiting_descriptors.first);
     SemDescriptor* des = des_ptr->descriptor;

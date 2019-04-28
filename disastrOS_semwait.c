@@ -17,23 +17,15 @@ void internal_semWait(){
   }
 
   // check whether the descriptor is amongst the process' open descriptors
-  ListItem* aux = running->sem_descriptors.first;
-  int present = 0;
-  for (int i = 0; i<running->sem_descriptors.size; i++){
-    if (((SemDescriptor*)aux)->fd == fd) {
-      present = 1;
-      break;
-    }
-    aux = aux->next;
-  }
-  // if the semaphore hasn't previously been opened, return NOT ALLOWED OPERATION error
-  if (!present){
-    running->syscall_retvalue=DSOS_ESEMNOTALLW;
+  SemDescriptor* des = (SemDescriptor*)SemDescriptorList_byFd((ListHead*)&running->sem_descriptors,fd);
+  if (!des){
+    running->syscall_retvalue = DSOS_ESEMNOTALLW;
     return;
   }
 
-  Semaphore* s = ((SemDescriptor*)aux)->semaphore;
+  Semaphore* s = ((SemDescriptor*)des)->semaphore;
 
+  // if count > 0, just need to decrement it
   if (s->count > 0){
     s->count--;
     running->syscall_retvalue=0;
@@ -42,7 +34,12 @@ void internal_semWait(){
 
   assert(s->count==0);
 
-  SemDescriptorPtr* d_ptr = SemDescriptorPtr_alloc(((SemDescriptor*)aux));
+  // if count == 0, need to enter the process now running in the waiting lists and switch running proces
+  SemDescriptorPtr* d_ptr = SemDescriptorPtr_alloc(((SemDescriptor*)des));
+  if (!d_ptr){
+    running->syscall_retvalue = DSOS_ESEMNOFDPTR;
+    return;
+  }
 
   // insert the descriptor pointer associated with the process amongst the waiting descriptors of the semaphore
   List_insert(&s->waiting_descriptors,s->waiting_descriptors.last, (ListItem*)d_ptr);
@@ -53,7 +50,6 @@ void internal_semWait(){
 
   running->syscall_retvalue = 0;
 
-  // pick the next
   PCB* next_running= (PCB*) List_detach(&ready_list, ready_list.first);
   running=next_running;
 }

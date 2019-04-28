@@ -16,18 +16,9 @@ void internal_semClose(){
   }
 
   // check whether the descriptor is amongst the process' open descriptors
-  ListItem* aux = running->sem_descriptors.first;
-  int present = 0;
-  for (int i = 0; i<running->sem_descriptors.size; i++){
-    if (((SemDescriptor*)aux)->fd == fd) {
-      present = 1;
-      break;
-    }
-    aux = aux->next;
-  }
-  // if the semaphore hasn't previously been opened, return NOT ALLOWED OPERATION error
-  if (!present){
-    running->syscall_retvalue=DSOS_ESEMNOTALLW;
+  SemDescriptor* aux = (SemDescriptor*)SemDescriptorList_byFd((ListHead*)&running->sem_descriptors,fd);
+  if (!aux){
+    running->syscall_retvalue = DSOS_ESEMNOTALLW;
     return;
   }
 
@@ -40,8 +31,8 @@ void internal_semClose(){
 
   SemDescriptorPtr* des_ptr = (SemDescriptorPtr*)des->ptr;
   des_ptr = (SemDescriptorPtr*)List_detach(&s->descriptors,(ListItem*)(des_ptr));
-
   assert(des_ptr);
+  
   SemDescriptor_free(des);
   SemDescriptorPtr_free(des_ptr);
 

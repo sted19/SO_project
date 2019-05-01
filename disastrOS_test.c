@@ -20,6 +20,17 @@ void childFunction(void* args){
   printf("Hello, I am the child function %d\n",disastrOS_getpid());
   printf("I will iterate a bit, before terminating\n");
 
+  printf("Now I open a lot of semaphore to test if there is the right error code if I open too many of them\n");
+  int fd_tmp;
+  for (int i = 0; i<MAX_NUM_DESCRIPTORS_PER_PROCESS+1; i++){
+    fd_tmp = test_semOpen(i);
+  }
+  printf("The last descriptor returned is %d\n",fd_tmp);
+  printf("now i close all these semaphores\n");
+  for (int i = 0; i<MAX_NUM_DESCRIPTORS_PER_PROCESS; i++){
+    test_semClose(i);
+  }
+
   printf("Open semaphore with id=5\n");
   int sem_fd = test_semOpen(5);
   printf("Open twice the semaphore 5, the print should return the same fd=%d as before\n",sem_fd);

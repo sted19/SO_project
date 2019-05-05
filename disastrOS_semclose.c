@@ -22,7 +22,6 @@ void internal_semClose(){
     return;
   }
 
-  assert(aux);
   Semaphore* s = ((SemDescriptor*)aux)->semaphore;
 
   // remove the descriptor from the list of the process' descriptors

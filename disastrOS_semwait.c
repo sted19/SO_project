@@ -34,7 +34,7 @@ void internal_semWait(){
 
   assert(s->count==0);
 
-  // if count == 0, need to enter the process now running in the waiting lists and switch running proces
+  // if count == 0, need to put the process that is running now in the waiting lists and switch running process
   SemDescriptorPtr* d_ptr = SemDescriptorPtr_alloc(((SemDescriptor*)des));
   if (!d_ptr){
     running->syscall_retvalue = DSOS_ESEMNOFDPTR;

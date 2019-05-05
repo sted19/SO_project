@@ -43,8 +43,6 @@ void internal_semOpen(){
     aux = (SemDescriptor*)((ListItem*)aux)->next;
   }
 
-  assert(!aux);
-
   SemDescriptor* fd = SemDescriptor_alloc(running->last_sem_fd, s, running);
   if (!fd) {
     running->syscall_retvalue = DSOS_ESEMNOFD;
